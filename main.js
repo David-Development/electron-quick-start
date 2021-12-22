@@ -1,6 +1,21 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, session} = require('electron')
 const path = require('path')
+const { autoUpdater } = require('electron-updater');
+
+
+// Auto-Updater Docs: https://www.electron.build/auto-update
+autoUpdater.setFeedURL('http://david-luhmer.de/404');
+console.log('autoUpdater.channel', autoUpdater.channel);
+console.log('autoUpdater.currentVersion', autoUpdater.currentVersion.version);
+
+
+// this calls kills the app once its in production mode
+setTimeout(() => {
+  console.log('let it crash!');
+  autoUpdater.checkForUpdatesAndNotify();
+}, 5000);
+
 
 function createWindow () {
   // Create the browser window.
@@ -17,6 +32,21 @@ function createWindow () {
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
+
+  const resourcesPath = require('process').resourcesPath;
+  const appPath = app.getAppPath();
+  const isPackaged = appPath.indexOf('app.asar') !== -1;
+  const pathToExtention = isPackaged ? resourcesPath : appPath;
+  const extensionPathDest = path.join(pathToExtention, "extensions/test-extension/");
+  console.log('Loading extension from path: ' + extensionPathDest);
+
+  session.defaultSession
+      .loadExtension(extensionPathDest)
+      .then((extension) => {
+        console.log('Extension loaded!', extension.id + ' - ' + extension.name + '@' + extension.version);
+      }).catch((e) => {
+        console.error(e);
+      });
 }
 
 // This method will be called when Electron has finished
